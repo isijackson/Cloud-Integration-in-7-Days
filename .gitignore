@@ -8,3 +8,4 @@ dist/
 .terraform/
 *.tfstate*
 .DS_Store
+__pycache__/

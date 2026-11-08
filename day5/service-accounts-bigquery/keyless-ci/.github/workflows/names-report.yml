@@ -1,7 +1,8 @@
 name: nightly-names-report
-# Keyless CI: GitHub Actions gets a short-lived Google Cloud credential through Workload Identity
-# Federation. No service-account key exists anywhere. The same OIDC pattern works for AWS
-# (aws-actions/configure-aws-credentials with a role) and Azure (azure/login with a federated credential).
+# Keyless CI: GitHub Actions gets a short-lived Google Cloud credential through
+# Workload Identity Federation. No service-account key exists anywhere. The
+# same OIDC pattern works for AWS (aws-actions/configure-aws-credentials with a
+# role) and Azure (azure/login with a federated credential).
 on:
   workflow_dispatch:
   schedule:
@@ -16,12 +17,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ vars.WIF_PROVIDER }}     # projects/NNN/locations/global/workloadIdentityPools/github/providers/github
-          service_account: ${{ vars.REPORT_SA }}                  # names-report@PROJECT.iam.gserviceaccount.com
+          # projects/NNN/locations/global/workloadIdentityPools/github/providers/github
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          # names-report@PROJECT.iam.gserviceaccount.com
+          service_account: ${{ vars.REPORT_SA }}
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -q google-cloud-bigquery
       - run: |
           python names.py TX
           python names.py UT
-          echo "credential source:"; ls -la ~ | grep -i json || echo "no key file in the runner home either"
+          echo "credential source:"; ls -la ~ | grep -i json \
+            || echo "no key file in the runner home either"
