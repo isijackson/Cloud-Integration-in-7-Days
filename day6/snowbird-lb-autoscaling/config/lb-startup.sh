@@ -1,6 +1,7 @@
 #!/bin/bash
-# lb-vm startup: HAProxy with a round-robin pool of the web-group instances, health checks, a stats page,
-# and a cron job that re-reads the group every minute so autoscaled instances join automatically.
+# lb-vm startup: HAProxy with a round-robin pool of the web-group instances,
+# health checks, a stats page, and a cron job that re-reads the group every
+# minute so autoscaled instances join automatically.
 apt-get update && apt-get install -y haproxy
 cat > /etc/haproxy/haproxy.cfg <<'CFG'
 global
@@ -22,7 +23,8 @@ listen stats
     stats enable
     stats uri /
 CFG
-curl -s -H 'Metadata-Flavor: Google' 'http://metadata.google.internal/computeMetadata/v1/instance/attributes/refresh-script' > /usr/local/bin/refresh-backends.sh
+curl -s -H 'Metadata-Flavor: Google' > /usr/local/bin/refresh-backends.sh \
+'http://metadata.google.internal/computeMetadata/v1/instance/attributes/refresh-script'
 chmod +x /usr/local/bin/refresh-backends.sh
 /usr/local/bin/refresh-backends.sh
 systemctl enable --now haproxy

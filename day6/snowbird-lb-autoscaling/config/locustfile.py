@@ -9,4 +9,5 @@ class PassBuyer(HttpUser):
         self.client.get('/static.txt')
     @task(4)
     def buy(self):
-        self.client.get('/buy')      # the CPU-bound checkout: this is what makes the group scale
+        # the CPU-bound checkout: this is what makes the group scale
+        self.client.get('/buy')

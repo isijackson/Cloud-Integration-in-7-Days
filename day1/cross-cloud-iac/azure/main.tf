@@ -74,7 +74,9 @@ resource "azurerm_network_security_group" "nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = var.ssh_source_cidr == "0.0.0.0/0" ? "*" : var.ssh_source_cidr
+    source_address_prefix      = (
+      var.ssh_source_cidr == "0.0.0.0/0" ? "*" : var.ssh_source_cidr
+    )
     destination_address_prefix = "*"
   }
   security_rule {
@@ -111,7 +113,8 @@ resource "azurerm_linux_virtual_machine" "web" {
   name                  = var.name
   location              = var.location
   resource_group_name   = local.rg
-  size                  = "Standard_D2s_v4" # the size that had capacity in the Vocareum sandbox (Week 1 Lab 2)
+  # the size that had capacity in the Vocareum sandbox (Week 1 Lab 2)
+  size                  = "Standard_D2s_v4"
   admin_username        = "ubuntu"
   network_interface_ids = [azurerm_network_interface.nic.id]
   admin_ssh_key {

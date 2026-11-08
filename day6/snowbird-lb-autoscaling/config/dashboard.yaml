@@ -1,0 +1,54 @@
+displayName: Snowbird launch test
+mosaicLayout:
+  columns: 12
+  tiles:
+  - width: 6
+    height: 4
+    widget:
+      title: CPU utilization (web-group)
+      xyChart:
+        dataSets:
+        - plotType: LINE
+          timeSeriesQuery:
+            timeSeriesFilter:
+              filter: >-
+                metric.type="compute.googleapis.com/instance/cpu/utilization"
+                resource.type="gce_instance"
+                metric.labels.instance_name=monitoring.regex.full_match("web-group.*")
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+  - xPos: 6
+    width: 6
+    height: 4
+    widget:
+      title: Instance count (web-group autoscaler)
+      xyChart:
+        dataSets:
+        - plotType: LINE
+          timeSeriesQuery:
+            timeSeriesFilter:
+              filter: >-
+                metric.type="compute.googleapis.com/instance_group/size"
+                resource.type="instance_group"
+                resource.label.instance_group_name="web-group"
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+  - yPos: 4
+    width: 12
+    height: 4
+    widget:
+      title: 'Request proxy: lb-vm received bytes'
+      xyChart:
+        dataSets:
+        - plotType: LINE
+          timeSeriesQuery:
+            timeSeriesFilter:
+              filter: >-
+                metric.type="compute.googleapis.com/instance/network/received_bytes_count"
+                resource.type="gce_instance"
+                metric.labels.instance_name="lb-vm"
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_RATE

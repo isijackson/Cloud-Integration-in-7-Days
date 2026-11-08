@@ -25,7 +25,9 @@ metadata:
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
 spec:
-  type: LoadBalancer   # Lab 4.4. Lab 4.5 switches it to ClusterIP once the IAP Ingress serves (README Lab 4.5, Part 3); the NEG above is all the Ingress needs
+  # Lab 4.4. Lab 4.5 switches it to ClusterIP once the IAP Ingress serves
+  # (README Lab 4.5, Part 3); the NEG above is all the Ingress needs
+  type: LoadBalancer
   selector:
     app: frontend
   ports:

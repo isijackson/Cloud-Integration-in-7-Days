@@ -8,7 +8,8 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.post('/api/timesheet', (req, res) => {
   const { nurseName, patientCode, visitDate, hours } = req.body;
   if (!nurseName || !patientCode || !visitDate || !hours) {
-    return res.status(400).json({ error: 'nurseName, patientCode, visitDate and hours are required' });
+    return res.status(400).json({ error:
+      'nurseName, patientCode, visitDate and hours are required' });
   }
   timesheets.push({ nurseName, patientCode, visitDate, hours: Number(hours) });
   res.status(201).json({ saved: timesheets.length });

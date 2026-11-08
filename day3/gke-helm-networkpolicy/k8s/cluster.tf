@@ -1,4 +1,5 @@
-# The Lab 3.2 cluster as code: tofu init && tofu apply -var project=<PROJECT_ID>; tofu destroy to clean up.
+# The Lab 3.2 cluster as code: tofu init && tofu apply -var project=<PROJECT_ID>;
+# tofu destroy to clean up.
 terraform {
   required_version = ">= 1.5"
   required_providers {
@@ -24,5 +25,9 @@ resource "google_container_cluster" "silverlake" {
   deletion_protection = false
 }
 output "get_credentials" {
-  value = "gcloud container clusters get-credentials ${google_container_cluster.silverlake.name} --region ${var.region} --project ${var.project}"
+  value = join(" ", [
+    "gcloud container clusters get-credentials",
+    google_container_cluster.silverlake.name,
+    "--region ${var.region} --project ${var.project}",
+  ])
 }
