@@ -1,0 +1,38 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: iap-config
+spec:
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: iap-oauth
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: timesheet-cert
+spec:
+  domains:
+  - HOSTNAME
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: timesheet-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: timesheet-ip
+    networking.gke.io/managed-certificates: timesheet-cert
+    kubernetes.io/ingress.class: gce
+spec:
+  rules:
+  - host: HOSTNAME
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80

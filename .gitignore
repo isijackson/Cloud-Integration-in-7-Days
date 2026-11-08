@@ -1,0 +1,10 @@
+node_modules/
+build/
+dist/
+*.zip
+*.qcow2
+*.raw
+*.tar.gz
+.terraform/
+*.tfstate*
+.DS_Store
