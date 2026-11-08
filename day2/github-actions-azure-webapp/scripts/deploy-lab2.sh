@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Week 2 Lab 2.2 deploy: GitHub repository canyon-schedule with the Express app, Azure resource group,
-# Free F1 Linux plan and Node 20 Web App, GitHub Actions deployment wired by the Azure CLI, then the
+# Free F1 Linux plan and a Web App on the newest Node LTS, GitHub Actions deployment wired by the Azure CLI, then the
 # live-change drill timed from push to live.
 #   deploy-lab2.sh <TEAM>          (gh and az must be signed in; LOCATION env optional, default eastus)
 # App Service quota is per region and per SKU: the Ensign College subscription has 0 F1 and 0 B1 in eastus but F1 in

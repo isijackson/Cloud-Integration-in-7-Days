@@ -7,9 +7,12 @@ for a in "$@"; do case "$a" in -n) DRY=1;; -y) YES=1;; --keep-cluster) KEEP=1;; 
 REGION="${REGION:-us-central1}"; CLUSTER="${CLUSTER:-silverlake-public}"
 g() { gcloud "$@" --project="$PROJECT" --quiet 2>/dev/null; }
 C=$(g container clusters list --filter="name=$CLUSTER" --format="value(name,location)")
+# use the region the cluster is really in, whatever REGION says
+L=$(awk 'NR==1{print $2}' <<<"$C"); [ -n "$L" ] && REGION="$L"
 echo "Lab 3.2 resources in $PROJECT:"; printf '  cluster (name location): %s\n' "${C:-none}"
 [ -z "$C" ] && { echo "Nothing to delete."; exit 0; }
-g container clusters get-credentials "$CLUSTER" --region="$REGION" >/dev/null 2>&1 && {
+g container clusters get-credentials "$CLUSTER" --region="$REGION" >/dev/null 2>&1 || { echo "cannot reach cluster $CLUSTER in $REGION; nothing deleted"; exit 1; }
+{
   printf '  helm releases: %s\n  policies: %s\n  deployments: %s\n' "$(helm list -q | tr '\n' ' ')" "$(kubectl get networkpolicy -o name | tr '\n' ' ')" "$(kubectl get deploy -o name | tr '\n' ' ')"; }
 [ "$DRY" = 1 ] && exit 0
 if [ "$YES" != 1 ]; then read -r -p "Delete all of the above? [y/N] " ans; [ "$ans" = y ] || { echo "Aborted."; exit 1; }; fi

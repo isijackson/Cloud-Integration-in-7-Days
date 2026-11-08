@@ -33,5 +33,5 @@ for attempt in 1 2; do
   RID=$(gh run list -R "$REPO" --workflow nightly-names-report --limit 1 --json databaseId --jq '.[0].databaseId')
   if gh run watch -R "$REPO" "$RID" --exit-status >/dev/null; then echo "run $RID green"; break; else echo "run $RID failed (attempt $attempt)"; sleep 60; fi
 done
-gh run view -R "$REPO" "$RID" --log 2>/dev/null | grep -E "Top names|^\s*[A-Z][a-z]+: [0-9]+|credential source|no key file" | sed 's/.*\t//' | head -16
+gh run view -R "$REPO" "$RID" --log 2>/dev/null | cut -f3- | sed 's/^[^ ]* //' | grep -E '^Top names|^  [A-Z][a-z]+: [0-9]+$|^credential source|^no key file' | sed 's/.*\t//' | head -16
 echo "LAB5_KEYLESS_CI_DONE"

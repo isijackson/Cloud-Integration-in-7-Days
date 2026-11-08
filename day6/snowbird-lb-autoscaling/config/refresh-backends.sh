@@ -9,7 +9,8 @@ IPS=$(gcloud compute instances list --filter='name~^web-group' \
 {
   sed '/^backend web_pool/,$d' /etc/haproxy/haproxy.cfg
   echo 'backend web_pool'; echo '    balance roundrobin'
-  echo '    option httpchk GET /'; echo '    default-server inter 3s fall 2 rise 2'
+  echo '    option httpchk GET /'; echo '    http-check expect string Snowbird'
+  echo '    default-server inter 3s fall 2 rise 2'
   i=1
   for ip in $IPS; do echo "    server web$i $ip:80 check"; i=$((i+1)); done
   echo 'listen stats'; echo '    bind *:8404'

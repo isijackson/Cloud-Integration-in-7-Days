@@ -4,11 +4,11 @@
 # Needs: doctl (auth init), gcloud (auth login), az (login), an SSH key uploaded to DigitalOcean.
 #   deploy-lab2.sh <GCP_PROJECT_ID>
 #   env: DO_SSH_KEY_NAME (DigitalOcean key name, default it360-lab-mac)  LOCAL_KEY (its private key, default ~/.ssh/id_ed25519)
-#        DO_CONTEXT DO_REGION (nyc1) DO_SIZE (s-1vcpu-1gb)  ZONE (us-central1-a)  AZ_RG (ansible-lab-rg) AZ_LOCATION (eastus) AZ_SIZE (Standard_B1s)
+#        DO_CONTEXT DO_REGION (nyc3) DO_SIZE (s-1vcpu-1gb)  ZONE (us-central1-a)  AZ_RG (ansible-lab-rg) AZ_LOCATION (eastus) AZ_SIZE (Standard_B1s)
 set -euo pipefail
 PROJECT="${1:?usage: $0 <GCP_PROJECT_ID>}"; D=$(cd "$(dirname "$0")/.." && pwd)
 DO_SSH_KEY_NAME="${DO_SSH_KEY_NAME:-it360-lab-mac}"; LOCAL_KEY="${LOCAL_KEY:-$HOME/.ssh/id_ed25519}"
-CTX=${DO_CONTEXT:+--context $DO_CONTEXT}; DO_REGION="${DO_REGION:-nyc1}"; DO_SIZE="${DO_SIZE:-s-1vcpu-1gb}"
+CTX=${DO_CONTEXT:+--context $DO_CONTEXT}; DO_REGION="${DO_REGION:-nyc3}"; DO_SIZE="${DO_SIZE:-s-1vcpu-1gb}"
 ZONE="${ZONE:-us-central1-a}"; AZ_RG="${AZ_RG:-ansible-lab-rg}"; AZ_LOCATION="${AZ_LOCATION:-eastus}"; AZ_SIZE="${AZ_SIZE:-Standard_B1s}"
 STATE="${STATE:-$HOME/lab2-state.env}"
 doctl account get $CTX >/dev/null || { echo "run: doctl auth init"; exit 1; }

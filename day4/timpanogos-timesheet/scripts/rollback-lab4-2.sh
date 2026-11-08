@@ -7,6 +7,9 @@ for a in "$@"; do case "$a" in -n) DRY=1;; -y) YES=1;; --keep-cluster) KEEP=1;; 
 ZONE="${ZONE:-us-central1-a}"; REGION="${REGION:-us-central1}"; CLUSTER="${CLUSTER:-timpanogos}"; CLUSTER_LOC="${CLUSTER_LOC:-$ZONE}"
 g() { gcloud "$@" --project="$PROJECT" --quiet 2>/dev/null; }
 C=$(g container clusters list --filter="name=$CLUSTER" --format="value(name,location)")
+# use the zone the cluster is really in, and its region for the registry
+L=$(awk 'NR==1{print $2}' <<<"$C")
+if [ -n "$L" ]; then CLUSTER_LOC="$L"; case "$L" in *-[a-z]) REGION="${L%-*}";; *) REGION="$L";; esac; fi
 AR=$(g artifacts repositories list --location="$REGION" --filter="name~timesheet" --format="value(name)")
 echo "Lab 4.4 resources in $PROJECT:"; printf '  cluster: %s\n  artifact repo: %s\n' "${C:-none}" "${AR:-none}"
 [ -z "$C$AR" ] && { echo "Nothing to delete."; exit 0; }; [ "$DRY" = 1 ] && exit 0
@@ -16,5 +19,5 @@ if [ -n "$C" ] && g container clusters get-credentials "$CLUSTER" --location="$C
   echo "workloads and services deleted"; sleep 20
   [ "$KEEP" = 1 ] && echo "cluster kept" || { g container clusters delete "$CLUSTER" --location="$CLUSTER_LOC" && echo "deleted cluster $CLUSTER"; }
 fi
-[ -n "$AR" ] && g artifacts repositories delete timesheet --location="$REGION" && echo "deleted artifact repo"
+[ -n "$AR" ] && g artifacts repositories delete "${AR##*/}" --location="$REGION" && echo "deleted artifact repo"
 echo "LAB4_2_ROLLBACK_DONE"

@@ -25,8 +25,10 @@ if [ -n "$LBR$CDNX" ]; then   # each delete is skipped quietly if that object do
   g compute ssl-certificates delete web-cert --global; g compute url-maps delete web-map --global; g compute backend-services delete web-backend --global
   g compute health-checks delete web-hc --global; g compute addresses delete web-cdn-ip --global; echo "deleted the Cloud CDN balancer"
 fi
-for v in $VMS; do g compute instances delete "$v" --zone="$ZONE" && echo "deleted $v"; done
-[ -n "$MIG" ] && g compute instance-groups managed delete web-group --zone="$ZONE" && echo "deleted web-group"
+# delete each VM and the group in the zone it is really in, not only $ZONE
+for v in $VMS; do z=$(g compute instances list --filter="name=$v" --format="value(zone.basename())"); g compute instances delete "$v" --zone="${z:-$ZONE}" && echo "deleted $v"; done
+MZ=$(g compute instance-groups managed list --filter="name=web-group" --format="value(zone.basename())")
+[ -n "$MIG" ] && g compute instance-groups managed delete web-group --zone="${MZ:-$ZONE}" && echo "deleted web-group"
 [ -n "$TPL" ] && g compute instance-templates delete web-template && echo "deleted web-template"
 for f in $FW; do g compute firewall-rules delete "$f" && echo "deleted rule $f"; done
 [ -n "$DB" ] && g monitoring dashboards delete "$DB" && echo "deleted dashboard"

@@ -34,7 +34,6 @@ Restart=always
 WantedBy=multi-user.target
 UNIT
 systemctl daemon-reload && systemctl enable --now checkout
-echo "<h1>Snowbird Pass Sales</h1><p>served by $(hostname)</p>" > /var/www/html/index.html
 echo ok > /var/www/html/static.txt
 cat > /etc/nginx/sites-available/default <<'NG'
 server {
@@ -49,3 +48,5 @@ server {
 }
 NG
 systemctl enable --now nginx && systemctl restart nginx
+# the store page last: HAProxy counts a server healthy only once it answers
+echo "<h1>Snowbird Pass Sales</h1><p>served by $(hostname)</p>" > /var/www/html/index.html

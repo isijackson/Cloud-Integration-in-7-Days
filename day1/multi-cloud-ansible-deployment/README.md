@@ -52,7 +52,7 @@ The DigitalOcean API token needs write scope, or the droplet create fails with a
 |---|---|---|
 | Your DigitalOcean key name | `it360-lab-mac` | `DO_SSH_KEY_NAME` |
 | Its private key on the laptop | `~/.ssh/id_ed25519` | `LOCAL_KEY` |
-| Controller | `ansible-controller`, nyc1, s-1vcpu-1gb | `DO_REGION`, `DO_SIZE` |
+| Controller | `ansible-controller`, nyc3, s-1vcpu-1gb | `DO_REGION`, `DO_SIZE` |
 | Google Cloud client | `ansible-client-gcp`, us-central1-a, e2-micro | `ZONE` |
 | Azure client | `ansible-client-azure`, `ansible-lab-rg`, eastus, Standard_B1s | `AZ_RG`, `AZ_LOCATION`, `AZ_SIZE` |
 | Inventory IPs | your two client IPs | edit `inventory.ini` on the controller (Step 7) |

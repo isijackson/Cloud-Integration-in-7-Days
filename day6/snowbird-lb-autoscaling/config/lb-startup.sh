@@ -17,6 +17,7 @@ frontend web_in
 backend web_pool
     balance roundrobin
     option httpchk GET /
+    http-check expect string Snowbird
     default-server inter 3s fall 2 rise 2
 listen stats
     bind *:8404

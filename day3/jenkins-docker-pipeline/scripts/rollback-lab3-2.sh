@@ -14,8 +14,8 @@ echo "Lab 3.3 resources on this machine:"; printf '  containers: %s\n  container
 [ -z "$C$M$V$I$N" ] && { echo "Nothing to delete."; exit 0; }
 [ "$DRY" = 1 ] && exit 0
 if [ "$YES" != 1 ]; then read -r -p "Delete all of the above? [y/N] " ans; [ "$ans" = y ] || { echo "Aborted."; exit 1; }; fi
-[ -n "$C" ] && docker rm -f $C >/dev/null && echo "removed containers"
-[ -n "${M// /}" ] && docker rm -f $M >/dev/null && echo "removed containers started from menu-board images"
+[ -n "$C" ] && docker rm -fv $C >/dev/null && echo "removed containers"
+[ -n "${M// /}" ] && docker rm -fv $M >/dev/null && echo "removed containers started from menu-board images"
 [ -n "$V" ] && docker volume rm $V >/dev/null && echo "removed volumes"
 if [ -n "$I" ]; then
   if docker rmi -f $I >/dev/null 2>&1; then echo "removed images"
