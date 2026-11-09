@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Week 1 Lab 1 (AWS -> GCP) verification: what exists on each side and whether both web servers answer.
-#   verify-lab1.sh <GCP_PROJECT_ID>          env: NAME ZONE AWS_DEFAULT_REGION (us-east-2) GCP_VM IMAGE
+#   verify-lab1.sh <GCP_PROJECT_ID>          env: NAME ZONE AWS_REGION (us-east-2) GCP_VM IMAGE BUCKET
+# NAME is the AWS side only. The Google Cloud names are fixed (apacheserver-gcp-aws, apacheserver-image-aws,
+# <PROJECT_ID>-apache-migration-aws) unless you override GCP_VM, IMAGE and BUCKET as in 04 and 06.
 set -uo pipefail
 PROJECT="${1:?usage: $0 <GCP_PROJECT_ID>}"; NAME="${NAME:-apacheserver1}"; ZONE="${ZONE:-us-central1-a}"
 GCP_VM="${GCP_VM:-apacheserver-gcp-aws}"; IMAGE="${IMAGE:-apacheserver-image-aws}"
-export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-2}"; export AWS_PAGER=""
+export AWS_REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-2}}"; export AWS_DEFAULT_REGION="$AWS_REGION"; export AWS_PAGER=""
 http() { curl -s -m 8 -o /dev/null -w '%{http_code}' "http://$1/"; }
 if aws sts get-caller-identity >/dev/null 2>&1; then
   echo "== AWS (account $(aws sts get-caller-identity --query Account --output text), $AWS_DEFAULT_REGION)"
@@ -23,7 +25,7 @@ echo "== GCP (project $PROJECT)"
 gcloud compute images list --project "$PROJECT" --no-standard-images --filter="name=$IMAGE" --format="table(name,family,diskSizeGb,status)" 2>/dev/null
 gcloud compute instances list --project "$PROJECT" --filter="name=$GCP_VM" --format="table(name,zone.basename(),machineType.basename(),status,networkInterfaces[0].accessConfigs[0].natIP)" 2>/dev/null
 gcloud compute firewall-rules list --project "$PROJECT" --filter="name=allow-http" --format="table(name,sourceRanges.list(),allowed[].map().firewall_rule().list())" 2>/dev/null
-gcloud storage ls "gs://${PROJECT}-apache-migration-aws/" 2>/dev/null
+gcloud storage ls "gs://${BUCKET:-${PROJECT}-apache-migration-aws}/" 2>/dev/null
 GCP_IP=$(gcloud compute instances describe "$GCP_VM" --project "$PROJECT" --zone "$ZONE" --format='value(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null)
 [ -n "$GCP_IP" ] && { echo "http://$GCP_IP/ -> $(http "$GCP_IP")"; curl -s -m 8 "http://$GCP_IP/" | grep -o '<title>.*</title>'; }
 echo "== Same server? (the marker Step 6 wrote on AWS must be served from GCP; cloud-init renames the host to the GCE instance name)"

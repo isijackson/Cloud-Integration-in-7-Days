@@ -2,6 +2,10 @@
 # Lab 1 (AWS variant) teardown, GCP side: the -aws suffixed VM, image and bucket. Finds the VM, image, bucket and firewall rules the lab created.
 # Run in Cloud Shell or anywhere gcloud is logged in.
 #   06-cleanup-gcp.sh <PROJECT_ID> [-n] [-y]     -n = dry run, -y = no confirmation prompt
+# The Google Cloud names are fixed and do NOT follow the AWS NAME variable: VM apacheserver-gcp-aws, image
+# apacheserver-image-aws (and family apacheserver-aws), bucket <PROJECT_ID>-apache-migration-aws. If you
+# changed them in 04-gcp-import-and-launch.sh, pass the same GCP_VM, IMAGE and BUCKET here. The list printed
+# below is exactly what will be deleted; run with -n first in a shared project.
 set -uo pipefail
 PROJECT="${1:?usage: $0 <PROJECT_ID> [-n] [-y]}"; shift; DRY=0; YES=0
 for a in "$@"; do case "$a" in -n) DRY=1;; -y) YES=1;; *) echo "usage: $0 <PROJECT_ID> [-n] [-y]"; exit 2;; esac; done

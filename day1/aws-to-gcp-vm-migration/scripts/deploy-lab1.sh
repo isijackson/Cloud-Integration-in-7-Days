@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Week 1 Lab 1 (AWS -> GCP) end to end from one laptop. Needs: AWS CLI credentials (AWS_PROFILE and
-# AWS_DEFAULT_REGION, default us-east-2), gcloud auth done, qemu-img and GNU tar (brew install qemu gnu-tar).
+# AWS_REGION, default us-east-2), gcloud auth done, qemu-img and GNU tar (brew install qemu gnu-tar).
 #   deploy-lab1.sh <GCP_PROJECT_ID>          env: NAME TYPE (AWS) ZONE BUCKET GCP_VM IMAGE (GCP)
 # No laptop credentials for AWS? Run 00-aws-all-in-one.sh in AWS CloudShell (us-east-2) instead, then
 #   bash 04-gcp-import-and-launch.sh <GCP_PROJECT_ID> <EC2_IP>   here, and Step 11 in CloudShell:
 #   ssh -i ~/.ssh/apacheserver1-key.pem ubuntu@<EC2_IP> 'sudo rm -f /var/www/html/disk.qcow2'
 set -euo pipefail
 PROJECT="${1:?usage: $0 <GCP_PROJECT_ID>}"; D=$(cd "$(dirname "$0")" && pwd); LOG="${LOG:-$HOME/lab1-aws-deploy.log}"
-export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-2}"; export AWS_PAGER=""
-aws sts get-caller-identity >/dev/null 2>&1 || { echo "AWS CLI has no working credentials (set AWS_PROFILE) - or run 00-aws-all-in-one.sh in CloudShell, see the header"; exit 1; }
+export AWS_REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-2}}"; export AWS_DEFAULT_REGION="$AWS_REGION"; export AWS_PAGER=""
+aws sts get-caller-identity >/dev/null 2>&1 || { echo "AWS CLI has no working credentials (aws login --profile ensign, then export AWS_PROFILE=ensign) - or run 00-aws-all-in-one.sh in CloudShell, see the header"; exit 1; }
 gcloud auth print-access-token >/dev/null 2>&1 || { echo "run: gcloud auth login"; exit 1; }
 echo "AWS account: $(aws sts get-caller-identity --query Account --output text) ($AWS_DEFAULT_REGION)   GCP project: $PROJECT   log: $LOG"
 T0=$(date +%s)

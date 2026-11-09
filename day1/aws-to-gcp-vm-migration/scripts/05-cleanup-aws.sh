@@ -4,26 +4,30 @@
 #   05-cleanup-aws.sh        list what will be deleted, ask, then delete
 #   05-cleanup-aws.sh -n     dry run: list only
 #   05-cleanup-aws.sh -y     delete without asking
-# NAME defaults to apacheserver1 (override with NAME=... in the environment).
+#   05-cleanup-aws.sh --route-b   also delete Route B's import role, ROLE (default vmimport-$USER)
+# NAME defaults to apacheserver1 (override with NAME=... in the environment). Names match exactly or
+# as NAME-something, so apacheserver10 is never touched. The IAM import role is deleted only when you
+# pass --route-b or set ROLE: an account-wide `vmimport` role may belong to someone else.
 set -uo pipefail
-export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-${AWS_REGION:-us-east-2}}"; export AWS_PAGER=""
-NAME="${NAME:-apacheserver1}"; DRY=0; YES=0
-for a in "$@"; do case "$a" in -n) DRY=1;; -y) YES=1;; *) echo "usage: $0 [-n] [-y]"; exit 2;; esac; done
+export AWS_REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-2}}"; export AWS_DEFAULT_REGION="$AWS_REGION"; export AWS_PAGER=""
+NAME="${NAME:-apacheserver1}"; DRY=0; YES=0; IMPORT_ROLE="${ROLE:-}"
+for a in "$@"; do case "$a" in -n) DRY=1;; -y) YES=1;; --route-b) IMPORT_ROLE="${ROLE:-vmimport-${USER:-$(id -un)}}";;
+  *) echo "usage: $0 [-n] [-y] [--route-b]"; exit 2;; esac; done
 q() { aws "$@" --output text 2>/dev/null; }
 
 INSTANCES=$(q ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" \
   "Name=instance-state-name,Values=pending,running,stopping,stopped" --query 'Reservations[].Instances[].InstanceId')
 VOLUMES=$(q ec2 describe-volumes --filters "Name=tag:Name,Values=${NAME}-scratch" --query 'Volumes[].VolumeId')
 SGS=$(q ec2 describe-security-groups --filters "Name=group-name,Values=${NAME}-sg" --query 'SecurityGroups[].GroupId')
-AMIS=$(q ec2 describe-images --owners self --filters "Name=name,Values=${NAME}*" --query 'Images[].ImageId')
-SNAPS=$(q ec2 describe-images --owners self --filters "Name=name,Values=${NAME}*" \
+AMIS=$(q ec2 describe-images --owners self --filters "Name=name,Values=${NAME},${NAME}-*" --query 'Images[].ImageId')
+SNAPS=$(q ec2 describe-images --owners self --filters "Name=name,Values=${NAME},${NAME}-*" \
   --query 'Images[].BlockDeviceMappings[].Ebs.SnapshotId')
-BUCKETS=$(q s3api list-buckets --query "Buckets[?starts_with(Name,'${NAME}')].Name")
-ROLE=$(q iam get-role --role-name vmimport --query Role.RoleName)
+BUCKETS=$(q s3api list-buckets --query "Buckets[?Name=='${NAME}' || starts_with(Name,'${NAME}-')].Name")
+ROLE=""; [ -n "$IMPORT_ROLE" ] && ROLE=$(q iam get-role --role-name "$IMPORT_ROLE" --query Role.RoleName)
 KEYS=$(q ec2 describe-key-pairs --filters "Name=key-name,Values=${NAME}-key" --query 'KeyPairs[].KeyName')
 
-echo "Lab 1 resources named '$NAME' in $(q sts get-caller-identity --query Account) / $(aws configure get region 2>/dev/null || echo "$AWS_DEFAULT_REGION"):"
-printf '  instances:       %s\n  scratch volumes: %s\n  security groups: %s\n  AMIs:            %s\n  snapshots:       %s\n  S3 buckets:      %s\n  IAM role:        %s\n  key pairs:       %s\n' \
+echo "Lab 1 resources named '$NAME' in $(q sts get-caller-identity --query Account) / $AWS_REGION:"
+printf '  instances:       %s\n  scratch volumes: %s\n  security groups: %s\n  AMIs:            %s\n  snapshots:       %s\n  S3 buckets:      %s\n  IAM import role: %s\n  key pairs:       %s\n' \
   "${INSTANCES:-none}" "${VOLUMES:-none}" "${SGS:-none}" "${AMIS:-none}" "${SNAPS:-none}" "${BUCKETS:-none}" "${ROLE:-none}" "${KEYS:-none}"
 [ -z "$INSTANCES$VOLUMES$SGS$AMIS$SNAPS$BUCKETS$ROLE$KEYS" ] && { echo "Nothing to delete."; exit 0; }
 [ "$DRY" = 1 ] && exit 0
@@ -39,9 +43,9 @@ for g in $SGS; do
 done
 for b in $BUCKETS; do aws s3 rb "s3://$b" --force >/dev/null && echo "deleted bucket $b"; done
 if [ -n "$ROLE" ]; then
-  for p in $(q iam list-role-policies --role-name vmimport --query PolicyNames); do aws iam delete-role-policy --role-name vmimport --policy-name "$p"; done
-  for p in $(q iam list-attached-role-policies --role-name vmimport --query 'AttachedPolicies[].PolicyArn'); do aws iam detach-role-policy --role-name vmimport --policy-arn "$p"; done
-  aws iam delete-role --role-name vmimport && echo "deleted IAM role vmimport"
+  for p in $(q iam list-role-policies --role-name "$ROLE" --query PolicyNames); do aws iam delete-role-policy --role-name "$ROLE" --policy-name "$p"; done
+  for p in $(q iam list-attached-role-policies --role-name "$ROLE" --query 'AttachedPolicies[].PolicyArn'); do aws iam detach-role-policy --role-name "$ROLE" --policy-arn "$p"; done
+  aws iam delete-role --role-name "$ROLE" && echo "deleted IAM role $ROLE"
 fi
 for k in $KEYS; do aws ec2 delete-key-pair --key-name "$k" && rm -f "$HOME/.ssh/$k.pem" && echo "deleted key pair $k"; done
 echo "Remaining non-terminated instances in this region: $(q ec2 describe-instances \

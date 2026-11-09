@@ -9,7 +9,7 @@
 set -uo pipefail
 MODE="${1:?usage: $0 <azure|aws|both> <GCP_PROJECT_ID>}"; PROJECT="${2:?usage: $0 <azure|aws|both> <GCP_PROJECT_ID>}"
 D=$(cd "$(dirname "$0")/.." && pwd); AZ="$D/azure-to-gcp-vm-migration/scripts"; AW="$D/aws-to-gcp-vm-migration/scripts"
-export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-2}"
+export AWS_REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-2}}"; export AWS_DEFAULT_REGION="$AWS_REGION"
 run_azure() { LOG="$HOME/lab1-azure-deploy.log" bash "$AZ/deploy-lab1.sh" "$PROJECT"; }
 run_aws() {
   if aws sts get-caller-identity >/dev/null 2>&1; then LOG="$HOME/lab1-aws-deploy.log" bash "$AW/deploy-lab1.sh" "$PROJECT"

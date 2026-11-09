@@ -13,7 +13,7 @@ You build an Ubuntu 22.04 EC2 instance running Apache, make its OS cloud-neutral
 | `scripts/02-aws-attach-scratch-volume.sh <INSTANCE_ID>` | Same | Step 5: a 10 GB gp3 volume `apacheserver1-scratch` attached as `/dev/sdf`. |
 | `scripts/03-ec2-make-image.sh` | **On the EC2 instance**, in the SSH session | Steps 6 to 8: make the OS cloud-neutral, mount the scratch volume, take a frozen raw copy of the root disk, check it, compress it to qcow2 and publish it. |
 | `scripts/04-gcp-import-and-launch.sh <PROJECT_ID> <EC2_PUBLIC_IP>` | Google Cloud Shell, or a laptop with `gcloud`, `qemu-img` and GNU tar | Steps 9 to 17: download, convert to the Compute Engine raw format, upload, create the image, launch the VM, open HTTP and validate. |
-| `scripts/05-cleanup-aws.sh [-n] [-y]` | Where the AWS CLI is configured | Clean up the AWS side, found by name. |
+| `scripts/05-cleanup-aws.sh [-n] [-y] [--route-b]` | Where the AWS CLI is configured | Clean up the AWS side, found by name. |
 | `scripts/06-cleanup-gcp.sh <PROJECT_ID> [-n] [-y]` | Where `gcloud` is signed in | Clean up the Google Cloud side (the `-aws` VM, image, bucket and firewall rules). |
 | `scripts/deploy-lab1.sh <PROJECT_ID>` | A laptop with AWS credentials and `gcloud` | The whole lab end to end. |
 | `scripts/verify-lab1.sh <PROJECT_ID>` | Same | What exists on each side and whether both web servers answer. |
@@ -33,7 +33,7 @@ gcloud auth login
 gcloud config set project seven-day-cloud
 ```
 
-AWS CloudShell needs no sign-in. For a laptop AWS session, Day 0's "Signing in" shows `aws configure` with a named profile and region us-east-2.
+AWS CloudShell needs no sign-in. For a laptop AWS session (AWS CLI 2.32 or later), Day 0's "Signing in" uses `aws login --profile ensign --region us-east-2` (add `--remote` on WSL or over SSH), then `export AWS_PROFILE=ensign`. The session is short-lived: when a call says `Your session has expired. Please reauthenticate using 'aws login'`, run `aws login` again.
 
 ## Mac and Windows
 
@@ -46,7 +46,7 @@ The book's values; write yours next to them before you start (the chapter's "Bef
 
 | Item | Book value | Override with |
 |---|---|---|
-| AWS region | us-east-2 | `export AWS_DEFAULT_REGION=us-east-2` (do this in a CloudShell opened outside Ohio) |
+| AWS region | us-east-2 | `export AWS_REGION=us-east-2 AWS_DEFAULT_REGION=us-east-2` (CloudShell sets `AWS_REGION`, which wins) |
 | Instance name, type | `apacheserver1`, t3.micro | `NAME`, `TYPE` |
 | Google Cloud project, zone | `seven-day-cloud`, us-central1-a | the `<PROJECT_ID>` argument, `ZONE` |
 | Bucket | `<PROJECT_ID>-apache-migration-aws` | `BUCKET` |
@@ -63,7 +63,7 @@ On the free AWS sandbox the region is us-east-1, the key pair `vockey` (`labsuse
 ```bash
 # 1. In AWS CloudShell, after cloning the repository there
 cd ~/Cloud-Integration-in-7-Days/day1/aws-to-gcp-vm-migration
-export AWS_DEFAULT_REGION=us-east-2
+export AWS_REGION=us-east-2 AWS_DEFAULT_REGION=us-east-2
 bash scripts/00-aws-all-in-one.sh            # prints the image URL http://<EC2_IP>/disk.qcow2
 
 # 2. In Google Cloud Shell or on the laptop
@@ -113,7 +113,7 @@ bash scripts/rollback-lab1.sh seven-day-cloud -n    # list only
 bash scripts/rollback-lab1.sh seven-day-cloud -y
 ```
 
-Keep `allow-http` while the Azure variant's VM is still running. Without laptop AWS credentials, run `bash scripts/05-cleanup-aws.sh -y` in AWS CloudShell and `bash scripts/06-cleanup-gcp.sh seven-day-cloud -y` in Google Cloud Shell. Route B adds an AMI, its snapshot, an S3 bucket and the `vmimport` role; Route C adds an IAM user and its access key; delete those as the chapter says.
+Keep `allow-http` while the Azure variant's VM is still running. Without laptop AWS credentials, run `bash scripts/05-cleanup-aws.sh -y` in AWS CloudShell and `bash scripts/06-cleanup-gcp.sh seven-day-cloud -y` in Google Cloud Shell. Route B adds an AMI, its snapshot, an S3 bucket and your import role; `05-cleanup-aws.sh --route-b` deletes the role `vmimport-$USER` (or `ROLE=...`) and never touches a shared `vmimport` role. Route C adds an IAM user and its access key; delete those as the chapter says.
 
 ## Cost
 

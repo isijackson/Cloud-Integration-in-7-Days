@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Week 1 Lab 1 (AWS variant), AWS side, steps 1-8 in one run. Run in AWS CloudShell or on a laptop where
-# the AWS CLI has credentials (AWS_PROFILE / AWS_DEFAULT_REGION). CloudShell sets AWS_REGION to its own
-# region, so from a CloudShell outside Ohio run `export AWS_DEFAULT_REGION=us-east-2` first. Creates a key pair, a
+# the AWS CLI has credentials (AWS_PROFILE, region). CloudShell sets AWS_REGION to its own region and the CLI
+# reads AWS_REGION before AWS_DEFAULT_REGION, so from a CloudShell outside Ohio run
+# `export AWS_REGION=us-east-2 AWS_DEFAULT_REGION=us-east-2` first. Creates a key pair, a
 # security group (SSH only from the machine running this script, HTTP open to all), an Ubuntu 22.04
 # instance, installs Apache, attaches a 10 GB scratch volume, prepares the OS for Google Cloud, captures
 # the root volume as a compressed qcow2 and publishes it at http://<PUBLIC_IP>/disk.qcow2.
-#   bash 00-aws-all-in-one.sh                 env: NAME (apacheserver1) TYPE (t3.micro) AWS_DEFAULT_REGION
-#   (default: AWS_REGION if set, as in CloudShell, else us-east-2)
+#   bash 00-aws-all-in-one.sh                 env: NAME (apacheserver1) TYPE (t3.micro) AWS_REGION
+#   (default: AWS_REGION if set, as in CloudShell, else AWS_DEFAULT_REGION, else us-east-2; both are set to it)
 set -euo pipefail
 NAME="${NAME:-apacheserver1}"; TYPE="${TYPE:-t3.micro}"; KEY_NAME="${NAME}-key"; KEY_FILE="$HOME/.ssh/${KEY_NAME}.pem"
-export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-${AWS_REGION:-us-east-2}}"; export AWS_PAGER=""
+export AWS_REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-2}}"; export AWS_DEFAULT_REGION="$AWS_REGION"; export AWS_PAGER=""
 mkdir -p ~/.ssh; chmod 700 ~/.ssh
 MY_IP=$(curl -s -4 --max-time 10 https://api.ipify.org || curl -s -4 --max-time 10 https://ifconfig.me)
 echo "ACCOUNT=$(aws sts get-caller-identity --query Account --output text) REGION=$AWS_DEFAULT_REGION TYPE=$TYPE ADMIN_IP=$MY_IP"; echo "T_START=$(date +%s)"   # T_ lines feed the step-timing table in deploy-lab1.sh
